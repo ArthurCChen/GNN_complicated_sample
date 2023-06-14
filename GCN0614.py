@@ -35,10 +35,13 @@ y = torch.randint(23, (320, 27458))  # replace with your actual data
 # Split the data into training and testing
 train_index, test_index = train_test_split(range(320), test_size=0.25, random_state=42)
 
-# Convert the adjacency representation to edge_index format
 def to_edge_index(y):
-    row, col = torch.where(y < 23)  # Assuming 23 is an invalid node index
-    return torch.stack([col, y[row, col]])
+    # Get all A node indices
+    A_indices = torch.arange(y.size(1)).unsqueeze(0).repeat(y.size(0), 1)
+
+    # The edge_index tensor should be of size [2, num_edges]
+    edge_index = torch.stack([A_indices[y != -1], y[y != -1]], dim=0)
+    return edge_index
 
 # Create PyG Data objects for each time step
 train_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in train_index]
