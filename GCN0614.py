@@ -24,16 +24,25 @@ class Net(torch.nn.Module):
 
         return torch.sigmoid(x)
 
+import torch
+from torch_geometric.data import Data
+from sklearn.model_selection import train_test_split
+
+# Assuming X is your feature tensor and y is your adjacency matrix
+X = torch.rand(320, 23, 3)  # replace with your actual data
+y = torch.randint(23, (320, 27458))  # replace with your actual data
+
 # Split the data into training and testing
 train_index, test_index = train_test_split(range(320), test_size=0.25, random_state=42)
-X_train = X[train_index]
-y_train = y[train_index]
-X_test = X[test_index]
-y_test = y[test_index]
 
-# Create PyG Data objects
-train_data = Data(x=X_train, edge_index=y_train)
-test_data = Data(x=X_test, edge_index=y_test)
+# Convert the adjacency representation to edge_index format
+def to_edge_index(y):
+    row, col = torch.where(y < 23)  # Assuming 23 is an invalid node index
+    return torch.stack([col, y[row, col]])
+
+# Create PyG Data objects for each time step
+train_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in train_index]
+test_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in test_index]
 
 # Initialize the model and optimizer
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
