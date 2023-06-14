@@ -39,9 +39,14 @@ def to_edge_index(y):
     # Get all A node indices
     A_indices = torch.arange(y.size(1)).unsqueeze(0).repeat(y.size(0), 1)
 
-    # The edge_index tensor should be of size [2, num_edges]
-    edge_index = torch.stack([A_indices[y != -1], y[y != -1]], dim=0)
+    # Flatten the tensors and then stack
+    edge_index = torch.stack([A_indices[y != -1].flatten(), y[y != -1].flatten()], dim=0)
     return edge_index
+
+# Create PyG Data objects for each time step
+train_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in train_index]
+test_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in test_index]
+
 
 # Create PyG Data objects for each time step
 train_data = [Data(x=X[i], edge_index=to_edge_index(y[i])) for i in train_index]
