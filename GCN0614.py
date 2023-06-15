@@ -86,3 +86,46 @@ for epoch in range(100):
 
 # Evaluation
 pred = evaluate(test_data)
+
+
+
+
+
+from torch_geometric.data import DataLoader
+
+# Create DataLoader for training and testing sets
+train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_data, batch_size=32)
+
+# Training function
+def train():
+    model.train()
+    total_loss = 0
+    for data in train_loader:
+        data = data.to(device)
+        optimizer.zero_grad()
+        out = model(data)
+        loss = F.binary_cross_entropy(out[data.edge_index[0]], data.edge_index[1])  # Update your loss function accordingly
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+    return total_loss / len(train_loader)  # Return average loss
+
+# Evaluation function
+def evaluate(loader):
+    model.eval()
+    all_preds = []
+    for data in loader:
+        data = data.to(device)
+        with torch.no_grad():
+            pred = model(data)
+        all_preds.append(pred)
+    return all_preds  # Return predictions for all graphs
+
+# Training loop
+for epoch in range(100):
+    loss = train()
+    print(f'Epoch: {epoch+1}, Loss: {loss:.4f}')
+
+# Evaluation
+preds = evaluate(test_loader)
